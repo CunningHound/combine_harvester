@@ -106,7 +106,7 @@ fn setup(
 fn setup_camera( mut commands: Commands, )
 {
         commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(0., 20., -50.).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(0., 150., -20.).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
 }
