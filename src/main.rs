@@ -59,7 +59,7 @@ fn setup(
     game.size = (100, 100);
     game.combine.entity = Some(commands.spawn_bundle(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Cube { size: 5.})),
-        material: materials.add(Color::rgb(0.8,0.9,0.85).into()),
+        material: materials.add(Color::BLUE.into()),
         transform: Transform {
             translation: Vec3::new(25., 2.5, 0.).into(),
             ..default()
@@ -71,7 +71,7 @@ fn setup(
 
     game.combine.entity = Some(commands.spawn_bundle(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Cube { size: 3.})),
-        material: materials.add(Color::YELLOW_GREEN.into()),
+        material: materials.add(Color::YELLOW.into()),
         transform: Transform {
             translation: Vec3::new(-15., 1.5, 0.).into(),
             ..default()
@@ -84,7 +84,7 @@ fn setup(
     game.score = 0;
     commands.spawn_bundle( PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
-        material: materials.add(Color::rgb(0.6,0.8, 0.2).into()),
+        material: materials.add(Color::DARK_GREEN.into()),
         ..default()
     });
 
@@ -92,7 +92,7 @@ fn setup(
         transform: Transform::from_xyz(0., 100., 0.),
         point_light: PointLight{
             color: Color::rgb(0.9,0.9,0.9).into(),
-            intensity: 50000.0,
+            intensity: 70000.0,
             shadows_enabled: true,
             range: 300.,
             ..default()
