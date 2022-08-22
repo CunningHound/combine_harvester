@@ -53,7 +53,7 @@ pub fn setup(
 
     let truck_id = commands.spawn_bundle(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Cube { size: 3.})),
-        material: materials.add(Color::YELLOW.into()),
+        material: materials.add(Color::RED.into()),
         transform: Transform {
             translation: Vec3::new(-15., 1.5, 0.).into(),
             ..default()

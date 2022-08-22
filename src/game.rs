@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::harvest;
+
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 pub enum GameState {
     Playing,
@@ -17,6 +19,8 @@ pub struct Game {
     light: Option<Entity>,
 }
 
+const MAP_HALF_SIZE: f32 = 100.0;
+const CORN_SIZE: f32 = 2.0;
 
 pub fn setup(
     mut commands: Commands,
@@ -27,15 +31,54 @@ pub fn setup(
 {
     game.size = (100, 100);
 
-    game.score = 0;
-    commands.spawn_bundle( PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane { size: 100.0 })),
-        material: materials.add(Color::DARK_GREEN.into()),
+    commands.spawn_bundle(Camera3dBundle {
+        transform: Transform::from_xyz(0., 150., -20.)
+            .looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
         ..default()
     });
 
+    game.score = 0;
+    commands.spawn_bundle( PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Plane { size: 2. * MAP_HALF_SIZE })),
+        material: materials.add(Color::SEA_GREEN.into()),
+        transform: Transform {
+            translation: Vec3::ZERO.into(),
+            ..default()
+
+        },
+        ..default()
+    });
+
+    let mut x = -MAP_HALF_SIZE;
+    loop
+    {
+        let mut z = -MAP_HALF_SIZE;
+        loop {
+            commands.spawn_bundle(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Cube { size: CORN_SIZE * 0.98 })),
+                material: materials.add(Color::YELLOW.into()),
+                transform: Transform {
+                    translation: Vec3:: new(x, 0.1, z).into(),
+                    ..default()
+                },
+                ..default()
+            })
+                .insert(harvest::Crop{});
+            z += CORN_SIZE;
+            if z >= MAP_HALF_SIZE
+            {
+                break;
+            }
+        }
+        x += CORN_SIZE;
+        if x >= MAP_HALF_SIZE
+        {
+            break;
+        }
+    }
+
     game.light = Some(commands.spawn_bundle(PointLightBundle{
-        transform: Transform::from_xyz(0., 100., 0.),
+        transform: Transform::from_xyz(MAP_HALF_SIZE /2., 100., MAP_HALF_SIZE /2.),
         point_light: PointLight{
             color: Color::rgb(0.9,0.9,0.9).into(),
             intensity: 70000.0,
@@ -46,5 +89,6 @@ pub fn setup(
         ..default()
     }
     ).id());
+
 
 }
