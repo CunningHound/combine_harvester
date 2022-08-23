@@ -1,10 +1,9 @@
-mod vehicles;
 mod game;
 mod harvest;
+mod vehicles;
 
 use bevy::prelude::*;
 use heron::prelude::*;
-
 
 fn main() {
     App::new()
@@ -17,7 +16,7 @@ fn main() {
         .add_system_set(
             SystemSet::on_update(game::GameState::Playing)
                 .with_system(vehicles::move_combine)
-                .with_system(vehicles::move_truck)
+                .with_system(vehicles::move_truck),
         )
         .run();
 }

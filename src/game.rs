@@ -27,68 +27,71 @@ pub fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut game: ResMut<Game>,
-)
-{
-    game.size = (2*MAP_HALF_SIZE, 2*MAP_HALF_SIZE);
+) {
+    game.size = (2 * MAP_HALF_SIZE, 2 * MAP_HALF_SIZE);
 
     commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(0., 150., -20.)
-            .looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
+        transform: Transform::from_xyz(0., 150., -20.).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
         ..default()
     });
 
     game.score = 0;
-    commands.spawn_bundle( PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane { size: (2 * MAP_HALF_SIZE) as f32 })),
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Plane {
+            size: (2 * MAP_HALF_SIZE) as f32,
+        })),
         material: materials.add(Color::SEA_GREEN.into()),
         transform: Transform {
             translation: Vec3::ZERO.into(),
             ..default()
-
         },
         ..default()
     });
 
     let mut x = -MAP_HALF_SIZE as f32;
-    loop
-    {
+    loop {
         let mut z = -MAP_HALF_SIZE as f32;
         loop {
-            commands.spawn_bundle(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Cube { size: CORN_SIZE * 0.98 })),
-                material: materials.add(Color::YELLOW.into()),
-                transform: Transform {
-                    translation: Vec3:: new(x, 0.1, z).into(),
+            commands
+                .spawn_bundle(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Cube {
+                        size: CORN_SIZE * 0.98,
+                    })),
+                    material: materials.add(Color::YELLOW.into()),
+                    transform: Transform {
+                        translation: Vec3::new(x, 0.1, z).into(),
+                        ..default()
+                    },
                     ..default()
-                },
-                ..default()
-            })
-                .insert(harvest::Crop{amount: 1, value: 1});
+                })
+                .insert(harvest::Crop {
+                    amount: 1,
+                    value: 1,
+                });
             z += CORN_SIZE;
-            if z >= MAP_HALF_SIZE as f32
-            {
+            if z >= MAP_HALF_SIZE as f32 {
                 break;
             }
         }
         x += CORN_SIZE;
-        if x >= MAP_HALF_SIZE as f32
-        {
+        if x >= MAP_HALF_SIZE as f32 {
             break;
         }
     }
 
-    game.light = Some(commands.spawn_bundle(PointLightBundle{
-        transform: Transform::from_xyz(MAP_HALF_SIZE /2., 100., MAP_HALF_SIZE /2.),
-        point_light: PointLight{
-            color: Color::rgb(0.9,0.9,0.9).into(),
-            intensity: 70000.0,
-            shadows_enabled: true,
-            range: 300.,
-            ..default()
-        },
-        ..default()
-    }
-    ).id());
-
-
+    game.light = Some(
+        commands
+            .spawn_bundle(PointLightBundle {
+                transform: Transform::from_xyz(MAP_HALF_SIZE / 2., 100., MAP_HALF_SIZE / 2.),
+                point_light: PointLight {
+                    color: Color::rgb(0.9, 0.9, 0.9).into(),
+                    intensity: 70000.0,
+                    shadows_enabled: true,
+                    range: 300.,
+                    ..default()
+                },
+                ..default()
+            })
+            .id(),
+    );
 }
