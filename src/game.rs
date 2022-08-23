@@ -1,11 +1,21 @@
 use bevy::prelude::*;
+use heron::prelude::*;
 
 use crate::harvest;
+use crate::harvest::CropHarvestedEvent;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 pub enum GameState {
     Playing,
     GameOver,
+}
+
+#[derive(PhysicsLayer)]
+pub enum GameLayer {
+    Combine,
+    Truck,
+    Crop,
+    Obstacle,
 }
 
 #[derive(Default)]
@@ -19,8 +29,12 @@ pub struct Game {
     light: Option<Entity>,
 }
 
-const MAP_HALF_SIZE: i32 = 100;
-const CORN_SIZE: f32 = 2.0;
+pub struct ScoreChangeEvent {
+    pub amount: i32,
+}
+
+const MAP_HALF_SIZE: i32 = 50;
+const CORN_SIZE: f32 = 1.0;
 
 pub fn setup(
     mut commands: Commands,
@@ -67,7 +81,21 @@ pub fn setup(
                 .insert(harvest::Crop {
                     amount: 1,
                     value: 1,
-                });
+                })
+                .insert(RigidBody::Sensor)
+                .insert(CollisionShape::Cuboid {
+                    half_extends: Vec3 {
+                        x: CORN_SIZE / 2.,
+                        y: CORN_SIZE / 2.,
+                        z: CORN_SIZE / 2.,
+                    },
+                    border_radius: None,
+                })
+                .insert(
+                    CollisionLayers::none()
+                        .with_group(GameLayer::Crop)
+                        .with_masks(&[GameLayer::Combine, GameLayer::Truck]),
+                );
             z += CORN_SIZE;
             if z >= MAP_HALF_SIZE as f32 {
                 break;
@@ -82,7 +110,11 @@ pub fn setup(
     game.light = Some(
         commands
             .spawn_bundle(PointLightBundle {
-                transform: Transform::from_xyz(MAP_HALF_SIZE / 2., 100., MAP_HALF_SIZE / 2.),
+                transform: Transform::from_xyz(
+                    MAP_HALF_SIZE as f32 / 2.,
+                    100.,
+                    MAP_HALF_SIZE as f32 / 2.,
+                ),
                 point_light: PointLight {
                     color: Color::rgb(0.9, 0.9, 0.9).into(),
                     intensity: 70000.0,
@@ -94,4 +126,14 @@ pub fn setup(
             })
             .id(),
     );
+}
+
+pub fn update_score(
+    mut game: ResMut<Game>,
+    mut score_change_events: EventReader<ScoreChangeEvent>,
+) {
+    for score_change in score_change_events.iter() {
+        game.score += score_change.amount;
+    }
+    println!("score is now {:?}", game.score);
 }
