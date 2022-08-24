@@ -10,6 +10,7 @@ fn main() {
         .init_resource::<game::Game>()
         .add_plugins(DefaultPlugins)
         .add_plugin(PhysicsPlugin::default())
+        .insert_resource(Gravity::from(Vec3::new(0.0, -9.81, 0.0)))
         .add_state(game::GameState::Playing)
         .add_event::<harvest::CropHarvestedEvent>()
         .add_event::<harvest::CropSquashedEvent>()
