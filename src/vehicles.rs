@@ -1,6 +1,7 @@
 use crate::game;
 use crate::harvest;
 
+use bevy::gltf::GltfMesh;
 use bevy::prelude::*;
 use heron::prelude::*;
 
@@ -31,13 +32,13 @@ pub fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut game: ResMut<game::Game>,
+    asset_server: Res<AssetServer>,
 ) {
     let combine_id = commands
-        .spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 5. })),
-            material: materials.add(Color::BLUE.into()),
+        .spawn_bundle(SceneBundle {
+            scene: asset_server.load("combine.gltf#Scene0"),
             transform: Transform {
-                translation: Vec3::new(25., 2.6, 0.).into(),
+                translation: Vec3::new(-75., 1.6, -30.).into(),
                 ..default()
             },
             ..default()
@@ -52,16 +53,6 @@ pub fn setup(
             transfer_speed: 10.,
             capacity: 100.,
         })
-        .insert(RigidBody::Dynamic)
-        .insert(Velocity::from_linear(Vec3::ZERO).with_angular(AxisAngle::new(Vec3::Y, 0.)))
-        .insert(CollisionShape::Cuboid {
-            half_extends: Vec3 {
-                x: 2.5,
-                y: 2.5,
-                z: 2.5,
-            },
-            border_radius: None,
-        })
         .insert(
             CollisionLayers::none()
                 .with_groups(&[game::GameLayer::Combine, game::GameLayer::Vehicle])
@@ -72,6 +63,16 @@ pub fn setup(
                     game::GameLayer::World,
                 ]),
         )
+        .insert(RigidBody::Dynamic)
+        .insert(Velocity::from_linear(Vec3::ZERO).with_angular(AxisAngle::new(Vec3::Y, 0.)))
+        .insert(CollisionShape::Cuboid {
+            half_extends: Vec3 {
+                x: 3.5,
+                y: 2.,
+                z: 2.,
+            },
+            border_radius: None,
+        })
         .id();
 
     game.combine = Some(combine_id);
@@ -81,7 +82,7 @@ pub fn setup(
             mesh: meshes.add(Mesh::from(shape::Cube { size: 3. })),
             material: materials.add(Color::RED.into()),
             transform: Transform {
-                translation: Vec3::new(-15., 1.6, 0.).into(),
+                translation: Vec3::new(-75., 1.6, 0.).into(),
                 ..default()
             },
             ..default()
