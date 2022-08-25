@@ -1,6 +1,7 @@
 mod drop_zone;
 mod game;
 mod harvest;
+mod ui;
 mod vehicles;
 
 use bevy::prelude::*;
@@ -27,6 +28,7 @@ fn main() {
         .add_system_set(SystemSet::on_enter(game::GameState::Playing).with_system(game::setup))
         .add_system_set(SystemSet::on_enter(game::GameState::Playing).with_system(vehicles::setup))
         .add_system_set(SystemSet::on_enter(game::GameState::Playing).with_system(drop_zone::setup))
+        .add_system_set(SystemSet::on_enter(game::GameState::Playing).with_system(ui::setup))
         .add_system_set(
             SystemSet::on_update(game::GameState::Playing)
                 .with_system(vehicles::move_combine)
@@ -42,6 +44,9 @@ fn main() {
             SystemSet::on_update(game::GameState::Playing)
                 .with_system(drop_zone::drop_zone_update)
                 .with_system(drop_zone::drop_zone_accept),
+        )
+        .add_system_set(
+            SystemSet::on_update(game::GameState::Playing).with_system(ui::update_ui_score),
         )
         .add_system(game::update_score)
         .run();

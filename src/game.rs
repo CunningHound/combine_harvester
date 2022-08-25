@@ -25,7 +25,7 @@ pub struct Game {
     size: (i32, i32),
     pub combine: Option<Entity>,
     pub truck: Option<Entity>,
-    score: i32,
+    pub score: i32,
     map: PbrBundle,
     camera: Camera3dBundle,
     light: Option<Entity>,

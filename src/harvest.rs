@@ -22,7 +22,6 @@ pub fn crop_events_handler(
     mut commands: Commands,
     mut crop_squashed_events: EventReader<CropSquashedEvent>,
     mut crop_harvested_events: EventReader<CropHarvestedEvent>,
-    mut score_change_events: EventWriter<ScoreChangeEvent>,
     mut query: Query<(&Crop, &Transform)>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
