@@ -95,10 +95,7 @@ pub fn setup(
                     },
                     ..default()
                 })
-                .insert(harvest::Crop {
-                    amount: 1,
-                    value: 1,
-                })
+                .insert(harvest::Crop { amount: 1 })
                 .insert(RigidBody::Sensor)
                 .insert(CollisionShape::Cuboid {
                     half_extends: Vec3 {
@@ -151,5 +148,6 @@ pub fn update_score(
 ) {
     for score_change in score_change_events.iter() {
         game.score += score_change.amount;
+        println!("score is now {:?} ", game.score);
     }
 }

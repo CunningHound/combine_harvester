@@ -7,24 +7,33 @@ use heron::prelude::*;
 
 #[derive(Default)]
 pub struct Vehicle {
-    drive_speed: f32,
-    turn_rate: f32,
-    acceleration: f32,
+    pub drive_speed: f32,
+    pub turn_rate: f32,
+    pub acceleration: f32,
 }
 
 #[derive(Component)]
 pub struct Combine {
-    vehicle: Vehicle,
-    harvest_speed: f32,
-    transfer_speed: f32,
-    capacity: f32,
+    pub vehicle: Vehicle,
+    pub transfer_speed: f32,
+}
+
+#[derive(Component)]
+pub struct CombineStorage {
+    pub capacity: i32,
+    pub contents: i32,
 }
 
 #[derive(Component)]
 pub struct Truck {
-    vehicle: Vehicle,
-    dump_speed: f32,
-    capacity: f32,
+    pub vehicle: Vehicle,
+    pub dump_speed: f32,
+}
+
+#[derive(Component)]
+pub struct TruckStorage {
+    pub capacity: i32,
+    pub contents: i32,
 }
 
 pub fn setup(
@@ -49,9 +58,7 @@ pub fn setup(
                 turn_rate: 4.,
                 acceleration: 5.,
             },
-            harvest_speed: 5.,
             transfer_speed: 10.,
-            capacity: 100.,
         })
         .insert(
             CollisionLayers::none()
@@ -94,7 +101,6 @@ pub fn setup(
                 acceleration: 10.,
             },
             dump_speed: 20.,
-            capacity: 200.,
         })
         .insert(RigidBody::Dynamic)
         .insert(Velocity::from_linear(Vec3::ZERO).with_angular(AxisAngle::new(Vec3::Y, 0.)))
@@ -116,23 +122,10 @@ pub fn setup(
                     game::GameLayer::World,
                 ]),
         )
+        .insert(Collisions::default())
         .id();
 
     game.truck = Some(truck_id);
-}
-
-pub fn harvest_event_handler(
-    mut commands: Commands,
-    mut harvest_events: EventReader<harvest::CropHarvestedEvent>,
-    mut game: ResMut<game::Game>,
-    mut query: Query<&harvest::Crop>,
-) {
-    for harvest in harvest_events.iter() {
-        let entity = harvest.entity;
-        if let Ok(crop) = query.get_mut(entity) {
-            println!("found a crop with value: {:?} ", crop.value);
-        }
-    }
 }
 
 pub fn combine_collision_check(
@@ -198,28 +191,27 @@ pub fn move_combine(
 ) {
     // there's always exactly one but I didn't understand resources when I wrote this
     let mut requested_direction = Vec2::new(0., 0.);
-    for (combine, mut transform, mut velocity) in query.iter_mut() {
-        if keyboard_input.pressed(KeyCode::W) {
-            requested_direction.y += 1.;
-        }
-        if keyboard_input.pressed(KeyCode::A) {
-            requested_direction.x += 1.;
-        }
-        if keyboard_input.pressed(KeyCode::S) {
-            requested_direction.y -= 1.;
-        }
-        if keyboard_input.pressed(KeyCode::D) {
-            requested_direction.x -= 1.;
-        }
-
-        update_vehicle(
-            &combine.vehicle,
-            requested_direction,
-            &mut transform,
-            &mut velocity,
-            &time,
-        );
+    let (combine, mut transform, mut velocity) = query.single_mut();
+    if keyboard_input.pressed(KeyCode::W) {
+        requested_direction.y += 1.;
     }
+    if keyboard_input.pressed(KeyCode::A) {
+        requested_direction.x += 1.;
+    }
+    if keyboard_input.pressed(KeyCode::S) {
+        requested_direction.y -= 1.;
+    }
+    if keyboard_input.pressed(KeyCode::D) {
+        requested_direction.x -= 1.;
+    }
+
+    update_vehicle(
+        &combine.vehicle,
+        requested_direction,
+        &mut transform,
+        &mut velocity,
+        &time,
+    );
 }
 
 pub fn move_truck(
@@ -227,29 +219,27 @@ pub fn move_truck(
     mut query: Query<(&Truck, &mut Transform, &mut Velocity)>,
     time: Res<Time>,
 ) {
-    // there's always exactly one but I didn't understand resources when I wrote this
-    for (truck, mut transform, mut velocity) in query.iter_mut() {
-        let mut requested_direction = Vec2::new(0., 0.);
-        if keyboard_input.pressed(KeyCode::Up) {
-            requested_direction.y += 1.;
-        }
-        if keyboard_input.pressed(KeyCode::Left) {
-            requested_direction.x += 1.;
-        }
-        if keyboard_input.pressed(KeyCode::Down) {
-            requested_direction.y -= 1.;
-        }
-        if keyboard_input.pressed(KeyCode::Right) {
-            requested_direction.x -= 1.;
-        }
-        update_vehicle(
-            &truck.vehicle,
-            requested_direction,
-            &mut transform,
-            &mut velocity,
-            &time,
-        );
+    let (truck, mut transform, mut velocity) = query.single_mut();
+    let mut requested_direction = Vec2::new(0., 0.);
+    if keyboard_input.pressed(KeyCode::Up) {
+        requested_direction.y += 1.;
     }
+    if keyboard_input.pressed(KeyCode::Left) {
+        requested_direction.x += 1.;
+    }
+    if keyboard_input.pressed(KeyCode::Down) {
+        requested_direction.y -= 1.;
+    }
+    if keyboard_input.pressed(KeyCode::Right) {
+        requested_direction.x -= 1.;
+    }
+    update_vehicle(
+        &truck.vehicle,
+        requested_direction,
+        &mut transform,
+        &mut velocity,
+        &time,
+    );
 }
 
 fn update_vehicle(
