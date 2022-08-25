@@ -74,7 +74,7 @@ pub fn setup(
         .insert(Velocity::from_linear(Vec3::ZERO).with_angular(AxisAngle::new(Vec3::Y, 0.)))
         .insert(CollisionShape::Cuboid {
             half_extends: Vec3 {
-                x: 3.5,
+                x: 2.5,
                 y: 2.,
                 z: 2.,
             },

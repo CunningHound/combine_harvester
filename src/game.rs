@@ -47,7 +47,7 @@ pub fn setup(
     game.size = (2 * FIELD_HALF_SIZE, 2 * FIELD_HALF_SIZE);
 
     commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(0., 150., -20.).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
+        transform: Transform::from_xyz(0., 150., -75.).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
         ..default()
     });
 
@@ -127,13 +127,13 @@ pub fn setup(
                 transform: Transform::from_xyz(
                     FIELD_HALF_SIZE as f32 / 2.,
                     100.,
-                    FIELD_HALF_SIZE as f32 / 2.,
+                    -FIELD_HALF_SIZE as f32 / 2.,
                 ),
                 point_light: PointLight {
                     color: Color::rgb(0.9, 0.9, 0.9).into(),
-                    intensity: 70000.0,
+                    intensity: 120000.0,
                     shadows_enabled: true,
-                    range: 300.,
+                    range: 500.,
                     ..default()
                 },
                 ..default()
