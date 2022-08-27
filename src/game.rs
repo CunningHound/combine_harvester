@@ -148,6 +148,5 @@ pub fn update_score(
 ) {
     for score_change in score_change_events.iter() {
         game.score += score_change.amount;
-        println!("score is now {:?} ", game.score);
     }
 }
