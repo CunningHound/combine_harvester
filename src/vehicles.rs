@@ -281,3 +281,27 @@ fn update_vehicle(
         velocity.angular = AxisAngle::new(Vec3::Y, 0.);
     }
 }
+
+pub fn transfer_harvest(
+    mut combines: Query<(&Combine, &Transform)>,
+    mut trucks: Query<(&Truck, &Transform)>,
+    mut combine_storage: ResMut<CombineStorage>,
+    mut truck_storage: ResMut<TruckStorage>,
+) {
+    if let Ok((combine, combine_transform)) = combines.get_single_mut() {
+        if let Ok((truck, truck_transform)) = trucks.get_single_mut() {
+            if combine_transform
+                .translation
+                .distance(truck_transform.translation)
+                < 15.
+            {
+                let to_transfer = i32::min(
+                    (truck_storage.capacity - truck_storage.contents),
+                    combine_storage.contents,
+                );
+                truck_storage.contents += to_transfer;
+                combine_storage.contents -= to_transfer;
+            }
+        }
+    }
+}
