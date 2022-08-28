@@ -61,7 +61,7 @@ pub fn setup(
             mesh: meshes.add(Mesh::from(shape::Plane {
                 size: (2 * GROUND_HALF_SIZE) as f32,
             })),
-            material: materials.add(Color::SEA_GREEN.into()),
+            material: materials.add(Color::LIME_GREEN.into()),
             transform: Transform {
                 translation: Vec3::ZERO.into(),
                 ..default()
