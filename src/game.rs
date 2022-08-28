@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use heron::prelude::*;
+use std::time;
 
 use crate::harvest;
 use crate::harvest::CORN_SIZE;
@@ -29,6 +30,7 @@ pub struct Game {
     map: PbrBundle,
     camera: Camera3dBundle,
     light: Option<Entity>,
+    pub time_remaining: time::Duration,
 }
 
 pub struct ScoreChangeEvent {
@@ -45,6 +47,8 @@ pub fn setup(
     mut game: ResMut<Game>,
 ) {
     game.size = (2 * FIELD_HALF_SIZE, 2 * FIELD_HALF_SIZE);
+
+    game.time_remaining = time::Duration::new(150, 0);
 
     commands.spawn_bundle(Camera3dBundle {
         transform: Transform::from_xyz(0., 150., -75.).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
@@ -148,5 +152,22 @@ pub fn update_score(
 ) {
     for score_change in score_change_events.iter() {
         game.score += score_change.amount;
+    }
+}
+
+pub fn countdown_timer(
+    mut game: ResMut<Game>,
+    mut time: ResMut<Time>,
+    mut app_state: ResMut<State<GameState>>,
+) {
+    if game.time_remaining > std::time::Duration::ZERO {
+        game.time_remaining = game
+            .time_remaining
+            .saturating_sub(time::Duration::from_secs_f32(time.delta_seconds()));
+        return;
+    }
+
+    if *app_state.current() != GameState::GameOver {
+        app_state.set(GameState::GameOver).unwrap();
     }
 }

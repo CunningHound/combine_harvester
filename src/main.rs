@@ -49,8 +49,16 @@ fn main() {
         .add_system_set(
             SystemSet::on_update(game::GameState::Playing)
                 .with_system(ui::update_ui_score)
-                .with_system(ui::update_contents),
+                .with_system(ui::update_contents)
+                .with_system(ui::update_time),
         )
-        .add_system(game::update_score)
+        .add_system_set(
+            SystemSet::on_update(game::GameState::Playing)
+                .with_system(game::update_score)
+                .with_system(game::countdown_timer),
+        )
+        .add_system_set(
+            SystemSet::on_enter(game::GameState::GameOver).with_system(ui::display_final_score),
+        )
         .run();
 }
