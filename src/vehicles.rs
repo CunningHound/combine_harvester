@@ -96,7 +96,7 @@ pub fn setup(
         .insert(Truck {
             vehicle: Vehicle {
                 drive_speed: 15.,
-                turn_rate: 6.,
+                turn_rate: 3.,
                 acceleration: 10.,
             },
             dump_speed: 20.,
@@ -259,15 +259,16 @@ fn update_vehicle(
         velocity.linear = current_direction * speed;
 
         let current_velocity_2d = Vec2::new(velocity.linear.x, velocity.linear.z);
-        if (requested_direction.normalize() - current_velocity_2d.normalize()).length() > 0.1 {
-            if current_velocity_2d.angle_between(requested_direction) > 0.05 {
-                velocity.angular = AxisAngle::new(Vec3::NEG_Y, vehicle.turn_rate);
-            } else {
-                velocity.angular = AxisAngle::new(Vec3::Y, vehicle.turn_rate);
+
+        if (requested_direction.normalize() - current_velocity_2d.normalize()).length() > 0. {
+            let max_abs_turn = time.delta_seconds() * vehicle.turn_rate;
+            let mut requested_turn = current_velocity_2d.angle_between(requested_direction);
+            if requested_turn.abs() > max_abs_turn {
+                requested_turn = requested_turn.clamp(-max_abs_turn, max_abs_turn);
             }
+            transform.rotate_y(-requested_turn)
         } else {
             velocity.angular = AxisAngle::new(Vec3::Y, 0.);
-            transform.rotate_y(-current_velocity_2d.angle_between(requested_direction));
         }
     } else {
         if velocity.linear.length() > 0. {
