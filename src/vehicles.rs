@@ -85,9 +85,8 @@ pub fn setup(
     game.combine = Some(combine_id);
 
     let truck_id = commands
-        .spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 3. })),
-            material: materials.add(Color::RED.into()),
+        .spawn_bundle(SceneBundle {
+            scene: asset_server.load("truck.gltf#Scene0"),
             transform: Transform {
                 translation: Vec3::new(-75., 1.6, 0.).into(),
                 ..default()
