@@ -23,7 +23,6 @@ pub enum GameLayer {
 
 #[derive(Default)]
 pub struct Game {
-    size: (i32, i32),
     pub combine: Option<Entity>,
     pub truck: Option<Entity>,
     pub score: i32,
@@ -38,7 +37,54 @@ pub struct ScoreChangeEvent {
 }
 
 const GROUND_HALF_SIZE: i32 = 250;
-const FIELD_HALF_SIZE: i32 = 50;
+
+pub fn create_field(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    field_half_size_x: f32,
+    field_half_size_z: f32,
+    field_position_x: f32,
+    field_position_z: f32,
+) {
+    let mut x = field_position_x - field_half_size_x as f32;
+    loop {
+        let mut z = -field_half_size_z as f32;
+        loop {
+            commands
+                .spawn_bundle(SceneBundle {
+                    scene: asset_server.load("wheat.gltf#Scene0"),
+                    transform: Transform {
+                        translation: Vec3::new(x, 0.7, z).into(),
+                        ..default()
+                    },
+                    ..default()
+                })
+                .insert(harvest::Crop { amount: 1 })
+                .insert(RigidBody::Sensor)
+                .insert(CollisionShape::Cuboid {
+                    half_extends: Vec3 {
+                        x: harvest::CORN_SIZE / 2.5,
+                        y: harvest::CORN_SIZE / 2.5,
+                        z: harvest::CORN_SIZE / 2.5,
+                    },
+                    border_radius: None,
+                })
+                .insert(
+                    CollisionLayers::none()
+                        .with_group(GameLayer::Crop)
+                        .with_masks(&[GameLayer::Combine, GameLayer::Truck]),
+                );
+            z += harvest::CORN_SIZE;
+            if z >= field_half_size_z as f32 {
+                break;
+            }
+        }
+        x += CORN_SIZE;
+        if x >= field_half_size_x as f32 {
+            break;
+        }
+    }
+}
 
 pub fn setup(
     mut commands: Commands,
@@ -47,8 +93,6 @@ pub fn setup(
     mut game: ResMut<Game>,
     asset_server: Res<AssetServer>,
 ) {
-    game.size = (2 * FIELD_HALF_SIZE, 2 * FIELD_HALF_SIZE);
-
     game.time_remaining = time::Duration::new(150, 0);
 
     commands.spawn_bundle(Camera3dBundle {
@@ -84,45 +128,6 @@ pub fn setup(
                 .with_mask(GameLayer::Vehicle),
         );
 
-    let mut x = -FIELD_HALF_SIZE as f32;
-    loop {
-        let mut z = -FIELD_HALF_SIZE as f32;
-        loop {
-            commands
-                .spawn_bundle(SceneBundle {
-                    scene: asset_server.load("wheat.gltf#Scene0"),
-                    transform: Transform {
-                        translation: Vec3::new(x, 0.7, z).into(),
-                        ..default()
-                    },
-                    ..default()
-                })
-                .insert(harvest::Crop { amount: 1 })
-                .insert(RigidBody::Sensor)
-                .insert(CollisionShape::Cuboid {
-                    half_extends: Vec3 {
-                        x: harvest::CORN_SIZE / 2.5,
-                        y: harvest::CORN_SIZE / 2.5,
-                        z: harvest::CORN_SIZE / 2.5,
-                    },
-                    border_radius: None,
-                })
-                .insert(
-                    CollisionLayers::none()
-                        .with_group(GameLayer::Crop)
-                        .with_masks(&[GameLayer::Combine, GameLayer::Truck]),
-                );
-            z += harvest::CORN_SIZE;
-            if z >= FIELD_HALF_SIZE as f32 {
-                break;
-            }
-        }
-        x += CORN_SIZE;
-        if x >= FIELD_HALF_SIZE as f32 {
-            break;
-        }
-    }
-
     const ORTH_PROJECTION_SIZE: f32 = 250.0;
     game.light = Some(
         commands
@@ -155,6 +160,8 @@ pub fn setup(
             })
             .id(),
     );
+
+    create_field(commands, asset_server, 50.0, 50.0, 0.0, 0.0);
 }
 
 pub fn update_score(
