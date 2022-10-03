@@ -7,7 +7,7 @@ pub struct Crop {
     pub amount: i32,
 }
 
-pub const CORN_SIZE: f32 = 1.0;
+pub const CORN_SIZE: f32 = 2.0;
 pub const CORN_SIZE_FILL_FRACTION: f32 = 0.98;
 
 pub struct CropHarvestedEvent {
@@ -26,20 +26,18 @@ pub fn crop_events_handler(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut combine_store: ResMut<vehicles::CombineStorage>,
+    asset_server: Res<AssetServer>,
 ) {
     for event in crop_squashed_events.iter() {
         let entity = event.entity;
         if let Ok((crop, transform)) = query.get_mut(entity) {
             let position = transform.translation;
-            commands.entity(event.entity).despawn();
-            commands.spawn_bundle(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Cube {
-                    size: CORN_SIZE * CORN_SIZE_FILL_FRACTION,
-                })),
-                material: materials.add(Color::BEIGE.into()),
+            commands.entity(event.entity).despawn_recursive();
+            commands.spawn_bundle(SceneBundle {
+                scene: asset_server.load("squashed_wheat.gltf#Scene0"),
                 transform: Transform {
-                    translation: position,
-                    scale: Vec3::new(1., 0.1, 1.).into(),
+                    translation: Vec3::new(transform.translation.x, 0.1, transform.translation.z)
+                        .into(),
                     ..default()
                 },
                 ..default()
@@ -53,7 +51,16 @@ pub fn crop_events_handler(
             if combine_store.contents < combine_store.capacity {
                 combine_store.contents += crop.amount;
             }
-            commands.entity(event.entity).despawn();
-        }
+            commands.entity(entity).despawn_recursive();
+            commands.spawn_bundle(SceneBundle {
+                scene: asset_server.load("harvested_wheat.gltf#Scene0"),
+                transform: Transform {
+                    translation: Vec3::new(transform.translation.x, 0.1, transform.translation.z)
+                        .into(),
+                    ..default()
+                },
+                ..default()
+            });
+        };
     }
 }

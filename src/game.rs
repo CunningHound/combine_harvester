@@ -45,13 +45,14 @@ pub fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut game: ResMut<Game>,
+    asset_server: Res<AssetServer>,
 ) {
     game.size = (2 * FIELD_HALF_SIZE, 2 * FIELD_HALF_SIZE);
 
     game.time_remaining = time::Duration::new(150, 0);
 
     commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(0., 150., -75.).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
+        transform: Transform::from_xyz(0., 100., -100.).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
         ..default()
     });
 
@@ -88,13 +89,10 @@ pub fn setup(
         let mut z = -FIELD_HALF_SIZE as f32;
         loop {
             commands
-                .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube {
-                        size: harvest::CORN_SIZE * harvest::CORN_SIZE_FILL_FRACTION,
-                    })),
-                    material: materials.add(Color::YELLOW.into()),
+                .spawn_bundle(SceneBundle {
+                    scene: asset_server.load("wheat.gltf#Scene0"),
                     transform: Transform {
-                        translation: Vec3::new(x, 0.1, z).into(),
+                        translation: Vec3::new(x, 0.7, z).into(),
                         ..default()
                     },
                     ..default()
@@ -103,9 +101,9 @@ pub fn setup(
                 .insert(RigidBody::Sensor)
                 .insert(CollisionShape::Cuboid {
                     half_extends: Vec3 {
-                        x: harvest::CORN_SIZE / 2.,
-                        y: harvest::CORN_SIZE / 2.,
-                        z: harvest::CORN_SIZE / 2.,
+                        x: harvest::CORN_SIZE / 2.5,
+                        y: harvest::CORN_SIZE / 2.5,
+                        z: harvest::CORN_SIZE / 2.5,
                     },
                     border_radius: None,
                 })
@@ -125,19 +123,32 @@ pub fn setup(
         }
     }
 
+    const ORTH_PROJECTION_SIZE: f32 = 250.0;
     game.light = Some(
         commands
-            .spawn_bundle(PointLightBundle {
-                transform: Transform::from_xyz(
-                    FIELD_HALF_SIZE as f32 / 2.,
-                    100.,
-                    -FIELD_HALF_SIZE as f32 / 2.,
-                ),
-                point_light: PointLight {
-                    color: Color::rgb(0.9, 0.9, 0.9).into(),
-                    intensity: 120000.0,
+            .spawn_bundle(DirectionalLightBundle {
+                directional_light: DirectionalLight {
+                    illuminance: 10000.0,
+                    shadow_projection: OrthographicProjection {
+                        left: -ORTH_PROJECTION_SIZE,
+                        right: ORTH_PROJECTION_SIZE,
+                        bottom: -ORTH_PROJECTION_SIZE,
+                        top: ORTH_PROJECTION_SIZE,
+                        near: -ORTH_PROJECTION_SIZE,
+                        far: ORTH_PROJECTION_SIZE,
+                        ..default()
+                    },
                     shadows_enabled: true,
-                    range: 500.,
+                    ..default()
+                },
+                transform: Transform {
+                    translation: Vec3::new(0.0, 10.0, 0.0),
+                    rotation: Quat::from_euler(
+                        EulerRot::XYZ,
+                        std::f32::consts::FRAC_PI_3 * 4.0,
+                        -std::f32::consts::FRAC_PI_4,
+                        0.,
+                    ),
                     ..default()
                 },
                 ..default()

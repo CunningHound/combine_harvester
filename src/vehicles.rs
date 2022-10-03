@@ -75,7 +75,7 @@ pub fn setup(
         .insert(CollisionShape::Cuboid {
             half_extends: Vec3 {
                 x: 2.5,
-                y: 2.,
+                y: 1.,
                 z: 2.,
             },
             border_radius: None,
@@ -106,7 +106,7 @@ pub fn setup(
         .insert(CollisionShape::Cuboid {
             half_extends: Vec3 {
                 x: 1.5,
-                y: 1.5,
+                y: 1.0,
                 z: 1.5,
             },
             border_radius: None,
