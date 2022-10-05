@@ -1,5 +1,6 @@
 use crate::game;
 use crate::harvest;
+use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, FRAC_PI_6, PI};
 
 use bevy::gltf::GltfMesh;
 use bevy::prelude::*;
@@ -10,6 +11,7 @@ pub struct Vehicle {
     pub drive_speed: f32,
     pub turn_rate: f32,
     pub acceleration: f32,
+    pub max_reverse: f32,
 }
 
 #[derive(Component)]
@@ -47,7 +49,7 @@ pub fn setup(
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("combine.gltf#Scene0"),
             transform: Transform {
-                translation: Vec3::new(-75., 1.6, -30.).into(),
+                translation: Vec3::new(60., 1.6, 0.).into(),
                 ..default()
             },
             ..default()
@@ -56,7 +58,8 @@ pub fn setup(
             vehicle: Vehicle {
                 drive_speed: 10.,
                 turn_rate: 4.,
-                acceleration: 5.,
+                acceleration: 20.,
+                max_reverse: 5.,
             },
             transfer_speed: 10.,
         })
@@ -74,11 +77,11 @@ pub fn setup(
         .insert(Velocity::from_linear(Vec3::ZERO).with_angular(AxisAngle::new(Vec3::Y, 0.)))
         .insert(CollisionShape::Cuboid {
             half_extends: Vec3 {
-                x: 2.5,
-                y: 1.,
+                x: 2.,
+                y: 0.3,
                 z: 2.,
             },
-            border_radius: None,
+            border_radius: Some(0.2),
         })
         .id();
 
@@ -88,7 +91,7 @@ pub fn setup(
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("truck.gltf#Scene0"),
             transform: Transform {
-                translation: Vec3::new(-75., 1.6, 0.).into(),
+                translation: Vec3::new(70., 1.6, 0.).into(),
                 ..default()
             },
             ..default()
@@ -97,7 +100,8 @@ pub fn setup(
             vehicle: Vehicle {
                 drive_speed: 15.,
                 turn_rate: 3.,
-                acceleration: 10.,
+                acceleration: 40.,
+                max_reverse: 5.,
             },
             dump_speed: 20.,
         })
@@ -106,10 +110,10 @@ pub fn setup(
         .insert(CollisionShape::Cuboid {
             half_extends: Vec3 {
                 x: 1.5,
-                y: 1.0,
-                z: 1.5,
+                y: 0.3,
+                z: 1.,
             },
-            border_radius: None,
+            border_radius: Some(0.2),
         })
         .insert(
             CollisionLayers::none()
@@ -248,38 +252,45 @@ fn update_vehicle(
     mut velocity: &mut Velocity,
     time: &Res<Time>,
 ) {
-    let mut speed = velocity.linear.length();
-    if requested_direction.length() > 0. {
-        let current_direction = transform.forward();
+    let mut velocity_on_plane = Vec2::new(velocity.linear.x, velocity.linear.z);
+    let current_speed = velocity_on_plane.length();
+    let mut speed = current_speed;
+    let max_change_in_speed = vehicle.acceleration * time.delta_seconds();
 
-        if speed < vehicle.drive_speed {
-            speed += vehicle.acceleration;
-        }
-
-        velocity.linear = current_direction * speed;
-
-        let current_velocity_2d = Vec2::new(velocity.linear.x, velocity.linear.z);
-
-        if (requested_direction.normalize() - current_velocity_2d.normalize()).length() > 0. {
-            let max_abs_turn = time.delta_seconds() * vehicle.turn_rate;
-            let mut requested_turn = current_velocity_2d.angle_between(requested_direction);
-            if requested_turn.abs() > max_abs_turn {
-                requested_turn = requested_turn.clamp(-max_abs_turn, max_abs_turn);
-            }
-            transform.rotate_y(-requested_turn)
+    if (requested_direction.length() == 0.) {
+        if current_speed >= 0. {
+            speed = f32::max((current_speed - max_change_in_speed), 0.);
         } else {
-            velocity.angular = AxisAngle::new(Vec3::Y, 0.);
+            speed = f32::min(current_speed + max_change_in_speed, 0.);
         }
     } else {
-        if velocity.linear.length() > 0. {
-            let current_direction = transform.forward();
-            speed = f32::max(speed - vehicle.acceleration, 0.);
-            velocity.linear.x = current_direction.x * speed;
-            velocity.linear.z = current_direction.z * speed;
+        let mut xz_velocity = velocity.linear;
+        xz_velocity.y = 0.;
+
+        let forward_on_plane = Vec2::new(transform.forward().x, transform.forward().z);
+        let mut requested_turn_angle = requested_direction.angle_between(forward_on_plane);
+        let reverse = requested_turn_angle.abs() > (4. * FRAC_PI_6);
+
+        speed += vehicle.acceleration * time.delta_seconds();
+
+        if reverse {
+            speed = -1. * speed;
+            if requested_turn_angle > 0. {
+                requested_turn_angle -= PI;
+            } else {
+                requested_turn_angle += PI;
+            }
         }
 
-        velocity.angular = AxisAngle::new(Vec3::Y, 0.);
+        let max_angle_to_turn = vehicle.turn_rate * time.delta_seconds();
+        let mut angle_to_turn = requested_turn_angle.clamp(-max_angle_to_turn, max_angle_to_turn);
+
+        speed = speed.clamp(-vehicle.max_reverse, vehicle.drive_speed);
+
+        transform.rotate_y(angle_to_turn);
     }
+    velocity.linear.x = speed * transform.forward().x;
+    velocity.linear.z = speed * transform.forward().z;
 }
 
 pub fn transfer_harvest(

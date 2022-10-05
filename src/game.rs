@@ -3,6 +3,8 @@ use heron::prelude::*;
 use std::f32::consts::FRAC_PI_2;
 use std::time;
 
+use rand::distributions::{Distribution, Uniform};
+
 use crate::harvest;
 use crate::harvest::CORN_SIZE;
 
@@ -61,7 +63,7 @@ fn spawn_fence(
         .spawn_bundle(SceneBundle {
             scene: asset_server.load("fence.gltf#Scene0"),
             transform: Transform {
-                translation: Vec3::new(x, 0.7, z).into(),
+                translation: Vec3::new(x, 0.0, z).into(),
                 rotation: Quat::from_rotation_y(rotation),
                 ..default()
             },
@@ -86,18 +88,18 @@ fn spawn_fence(
 fn create_fences(
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
-    field_half_size_x: f32,
-    field_half_size_z: f32,
     field_position_x: f32,
     field_position_z: f32,
+    field_half_size_x: f32,
+    field_half_size_z: f32,
     entrance_side: CompassPoint,
 ) {
     let half_x = field_half_size_x + FIELD_BORDER;
     let half_z = field_half_size_z + FIELD_BORDER;
-    let edge_n = field_position_x + half_x;
-    let edge_s = field_position_x - half_x;
-    let edge_e = field_position_z - half_z;
-    let edge_w = field_position_z + half_z;
+    let edge_n = field_position_z + half_z;
+    let edge_s = field_position_z - half_z;
+    let edge_e = field_position_x - half_x;
+    let edge_w = field_position_x + half_x;
 
     let mut x = edge_e;
     loop {
@@ -148,30 +150,35 @@ fn create_fences(
 fn create_field(
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
-    field_half_size_x: f32,
-    field_half_size_z: f32,
     field_position_x: f32,
     field_position_z: f32,
+    field_half_size_x: f32,
+    field_half_size_z: f32,
     entrance_side: CompassPoint,
 ) {
     create_fences(
         commands,
         asset_server,
-        field_half_size_x,
-        field_half_size_z,
         field_position_x,
         field_position_z,
+        field_half_size_x,
+        field_half_size_z,
         entrance_side,
     );
-    let mut x = field_position_x - field_half_size_x as f32;
+    let mut x = field_position_x - field_half_size_x;
     loop {
-        let mut z = -field_half_size_z as f32;
+        let mut z = field_position_z - field_half_size_z;
+
+        let rotation_picker = Uniform::new(0, 359);
+        let mut rng = rand::thread_rng();
+        let choice = rotation_picker.sample(&mut rng) as f32;
         loop {
             commands
                 .spawn_bundle(SceneBundle {
                     scene: asset_server.load("wheat.gltf#Scene0"),
                     transform: Transform {
                         translation: Vec3::new(x, 0.7, z).into(),
+                        rotation: Quat::from_rotation_y(choice.to_radians()),
                         ..default()
                     },
                     ..default()
@@ -191,13 +198,13 @@ fn create_field(
                         .with_group(GameLayer::Crop)
                         .with_masks(&[GameLayer::Combine, GameLayer::Truck]),
                 );
-            z += harvest::CORN_SIZE;
-            if z >= field_half_size_z as f32 {
+            z += CORN_SIZE;
+            if z >= field_position_z + field_half_size_z {
                 break;
             }
         }
         x += CORN_SIZE;
-        if x >= field_half_size_x as f32 {
+        if x >= field_position_x + field_half_size_x {
             break;
         }
     }
@@ -225,7 +232,7 @@ pub fn setup(
                 size: (2 * GROUND_HALF_SIZE) as f32,
             })),
             material: materials.add(StandardMaterial {
-                base_color: Color::LIME_GREEN.into(),
+                base_color: Color::DARK_GREEN.into(),
                 reflectance: 0.5,
                 metallic: 0.1,
                 ..default()
@@ -256,7 +263,7 @@ pub fn setup(
         commands
             .spawn_bundle(DirectionalLightBundle {
                 directional_light: DirectionalLight {
-                    illuminance: 10000.0,
+                    illuminance: 30000.0,
                     shadow_projection: OrthographicProjection {
                         left: -ORTH_PROJECTION_SIZE,
                         right: ORTH_PROJECTION_SIZE,
@@ -283,15 +290,59 @@ pub fn setup(
             })
             .id(),
     );
-
     create_field(
         &mut commands,
         &asset_server,
-        50.0,
-        50.0,
-        0.0,
-        0.0,
+        -52.0,
+        30.0,
+        18.0,
+        18.0,
         CompassPoint::South,
+    );
+    create_field(
+        &mut commands,
+        &asset_server,
+        -10.0,
+        30.0,
+        18.0,
+        18.0,
+        CompassPoint::South,
+    );
+    create_field(
+        &mut commands,
+        &asset_server,
+        32.0,
+        30.0,
+        18.0,
+        18.0,
+        CompassPoint::South,
+    );
+    create_field(
+        &mut commands,
+        &asset_server,
+        -52.0,
+        -30.0,
+        18.0,
+        18.0,
+        CompassPoint::North,
+    );
+    create_field(
+        &mut commands,
+        &asset_server,
+        -10.0,
+        -30.0,
+        18.0,
+        18.0,
+        CompassPoint::North,
+    );
+    create_field(
+        &mut commands,
+        &asset_server,
+        32.0,
+        -30.0,
+        18.0,
+        18.0,
+        CompassPoint::North,
     );
 }
 
