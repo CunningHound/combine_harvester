@@ -92,19 +92,21 @@ fn create_fences(
     field_position_z: f32,
     entrance_side: CompassPoint,
 ) {
-    let edge_n = field_position_x + field_half_size_x + FIELD_BORDER;
-    let edge_s = field_position_x - field_half_size_x - FIELD_BORDER;
-    let edge_e = field_position_z + field_half_size_z + FIELD_BORDER;
-    let edge_w = field_position_z - field_half_size_z - FIELD_BORDER;
+    let half_x = field_half_size_x + FIELD_BORDER;
+    let half_z = field_half_size_z + FIELD_BORDER;
+    let edge_n = field_position_x + half_x;
+    let edge_s = field_position_x - half_x;
+    let edge_e = field_position_z - half_z;
+    let edge_w = field_position_z + half_z;
 
-    let mut x = edge_w;
+    let mut x = edge_e;
     loop {
         if entrance_side != CompassPoint::North || (x - field_position_x).abs() > GATE_HALF_WIDTH {
             spawn_fence(
                 commands,
                 asset_server,
-                x + FENCE_SIZE / 2.,
-                edge_n,
+                x - FENCE_SIZE / 2.,
+                edge_n + FENCE_SIZE,
                 FRAC_PI_2,
             );
         }
@@ -112,26 +114,32 @@ fn create_fences(
             spawn_fence(
                 commands,
                 asset_server,
-                x + FENCE_SIZE / 2.,
+                x - FENCE_SIZE / 2.,
                 edge_s,
                 FRAC_PI_2,
             );
         }
         x += FENCE_SIZE;
-        if x >= edge_e {
+        if x > edge_w {
             break;
         }
     }
     let mut z = edge_s;
     loop {
         if entrance_side != CompassPoint::East || (z - field_position_z).abs() > GATE_HALF_WIDTH {
-            spawn_fence(commands, asset_server, edge_e, z + FENCE_SIZE / 2., 0.);
+            spawn_fence(
+                commands,
+                asset_server,
+                edge_e - FENCE_SIZE,
+                z + FENCE_SIZE / 2.,
+                0.,
+            );
         }
         if entrance_side != CompassPoint::West || (z - field_position_z).abs() > GATE_HALF_WIDTH {
             spawn_fence(commands, asset_server, edge_w, z + FENCE_SIZE / 2., 0.);
         }
         z += FENCE_SIZE;
-        if z >= edge_n {
+        if z > edge_n {
             break;
         }
     }
@@ -205,7 +213,8 @@ pub fn setup(
     game.time_remaining = time::Duration::new(150, 0);
 
     commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(0., 100., -100.).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
+        transform: Transform::from_xyz(0., 100., -100.)
+            .looking_at(Vec3::new(0., 0., -10.), Vec3::Y),
         ..default()
     });
 
