@@ -37,9 +37,18 @@ pub struct ScoreChangeEvent {
     pub amount: i32,
 }
 
+#[derive(PartialEq)]
+enum CompassPoint {
+    North,
+    East,
+    South,
+    West,
+}
+
 const GROUND_HALF_SIZE: i32 = 250;
 const FIELD_BORDER: f32 = 2.;
 const FENCE_SIZE: f32 = 2.;
+const GATE_HALF_WIDTH: f32 = 6.;
 
 fn spawn_fence(
     commands: &mut Commands,
@@ -81,6 +90,7 @@ fn create_fences(
     field_half_size_z: f32,
     field_position_x: f32,
     field_position_z: f32,
+    entrance_side: CompassPoint,
 ) {
     let edge_n = field_position_x + field_half_size_x + FIELD_BORDER;
     let edge_s = field_position_x - field_half_size_x - FIELD_BORDER;
@@ -89,20 +99,24 @@ fn create_fences(
 
     let mut x = edge_w;
     loop {
-        spawn_fence(
-            commands,
-            asset_server,
-            x + FENCE_SIZE / 2.,
-            edge_n,
-            FRAC_PI_2,
-        );
-        spawn_fence(
-            commands,
-            asset_server,
-            x + FENCE_SIZE / 2.,
-            edge_s,
-            FRAC_PI_2,
-        );
+        if entrance_side != CompassPoint::North || (x - field_position_x).abs() > GATE_HALF_WIDTH {
+            spawn_fence(
+                commands,
+                asset_server,
+                x + FENCE_SIZE / 2.,
+                edge_n,
+                FRAC_PI_2,
+            );
+        }
+        if entrance_side != CompassPoint::South || (x - field_position_x).abs() > GATE_HALF_WIDTH {
+            spawn_fence(
+                commands,
+                asset_server,
+                x + FENCE_SIZE / 2.,
+                edge_s,
+                FRAC_PI_2,
+            );
+        }
         x += FENCE_SIZE;
         if x >= edge_e {
             break;
@@ -110,8 +124,12 @@ fn create_fences(
     }
     let mut z = edge_s;
     loop {
-        spawn_fence(commands, asset_server, edge_e, z + FENCE_SIZE / 2., 0.);
-        spawn_fence(commands, asset_server, edge_w, z + FENCE_SIZE / 2., 0.);
+        if entrance_side != CompassPoint::East || (z - field_position_z).abs() > GATE_HALF_WIDTH {
+            spawn_fence(commands, asset_server, edge_e, z + FENCE_SIZE / 2., 0.);
+        }
+        if entrance_side != CompassPoint::West || (z - field_position_z).abs() > GATE_HALF_WIDTH {
+            spawn_fence(commands, asset_server, edge_w, z + FENCE_SIZE / 2., 0.);
+        }
         z += FENCE_SIZE;
         if z >= edge_n {
             break;
@@ -126,6 +144,7 @@ fn create_field(
     field_half_size_z: f32,
     field_position_x: f32,
     field_position_z: f32,
+    entrance_side: CompassPoint,
 ) {
     create_fences(
         commands,
@@ -134,6 +153,7 @@ fn create_field(
         field_half_size_z,
         field_position_x,
         field_position_z,
+        entrance_side,
     );
     let mut x = field_position_x - field_half_size_x as f32;
     loop {
@@ -255,7 +275,15 @@ pub fn setup(
             .id(),
     );
 
-    create_field(&mut commands, &asset_server, 50.0, 50.0, 0.0, 0.0);
+    create_field(
+        &mut commands,
+        &asset_server,
+        50.0,
+        50.0,
+        0.0,
+        0.0,
+        CompassPoint::South,
+    );
 }
 
 pub fn update_score(
