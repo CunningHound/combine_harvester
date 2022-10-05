@@ -8,6 +8,7 @@ use rand::distributions::{Distribution, Uniform};
 use crate::harvest;
 use crate::harvest::CORN_SIZE;
 
+const SECONDS_ON_TIMER: u64 = 300;
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 pub enum GameState {
     Playing,
@@ -217,7 +218,7 @@ pub fn setup(
     mut game: ResMut<Game>,
     asset_server: Res<AssetServer>,
 ) {
-    game.time_remaining = time::Duration::new(150, 0);
+    game.time_remaining = time::Duration::new(SECONDS_ON_TIMER, 0);
 
     commands.spawn_bundle(Camera3dBundle {
         transform: Transform::from_xyz(0., 100., -100.)

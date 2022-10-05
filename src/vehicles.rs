@@ -77,7 +77,7 @@ pub fn setup(
         .insert(Velocity::from_linear(Vec3::ZERO).with_angular(AxisAngle::new(Vec3::Y, 0.)))
         .insert(CollisionShape::Cuboid {
             half_extends: Vec3 {
-                x: 2.,
+                x: 1.5,
                 y: 0.3,
                 z: 2.,
             },
@@ -113,7 +113,7 @@ pub fn setup(
                 y: 0.3,
                 z: 1.,
             },
-            border_radius: Some(0.2),
+            border_radius: None,
         })
         .insert(
             CollisionLayers::none()
@@ -269,7 +269,7 @@ fn update_vehicle(
 
         let forward_on_plane = Vec2::new(transform.forward().x, transform.forward().z);
         let mut requested_turn_angle = requested_direction.angle_between(forward_on_plane);
-        let reverse = requested_turn_angle.abs() > (4. * FRAC_PI_6);
+        let reverse = requested_turn_angle.abs() > (3. * FRAC_PI_4);
 
         speed += vehicle.acceleration * time.delta_seconds();
 
