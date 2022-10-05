@@ -106,7 +106,12 @@ pub fn setup(
             mesh: meshes.add(Mesh::from(shape::Plane {
                 size: (2 * GROUND_HALF_SIZE) as f32,
             })),
-            material: materials.add(Color::LIME_GREEN.into()),
+            material: materials.add(StandardMaterial {
+                base_color: Color::LIME_GREEN.into(),
+                reflectance: 0.5,
+                metallic: 0.1,
+                ..default()
+            }),
             transform: Transform {
                 translation: Vec3::ZERO.into(),
                 ..default()
