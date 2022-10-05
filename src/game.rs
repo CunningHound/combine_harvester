@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use heron::prelude::*;
+use std::f32::consts::FRAC_PI_2;
 use std::time;
 
 use crate::harvest;
@@ -37,15 +38,103 @@ pub struct ScoreChangeEvent {
 }
 
 const GROUND_HALF_SIZE: i32 = 250;
+const FIELD_BORDER: f32 = 2.;
+const FENCE_SIZE: f32 = 2.;
 
-pub fn create_field(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
+fn spawn_fence(
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    x: f32,
+    z: f32,
+    rotation: f32,
+) {
+    commands
+        .spawn_bundle(SceneBundle {
+            scene: asset_server.load("fence.gltf#Scene0"),
+            transform: Transform {
+                translation: Vec3::new(x, 0.7, z).into(),
+                rotation: Quat::from_rotation_y(rotation),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(RigidBody::Static)
+        .insert(CollisionShape::Cuboid {
+            half_extends: Vec3 {
+                x: 2.0,
+                y: 1.0,
+                z: 0.2,
+            },
+            border_radius: None,
+        })
+        .insert(
+            CollisionLayers::none()
+                .with_group(GameLayer::World)
+                .with_masks(&[GameLayer::Combine, GameLayer::Truck]),
+        );
+}
+
+fn create_fences(
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
     field_half_size_x: f32,
     field_half_size_z: f32,
     field_position_x: f32,
     field_position_z: f32,
 ) {
+    let edge_n = field_position_x + field_half_size_x + FIELD_BORDER;
+    let edge_s = field_position_x - field_half_size_x - FIELD_BORDER;
+    let edge_e = field_position_z + field_half_size_z + FIELD_BORDER;
+    let edge_w = field_position_z - field_half_size_z - FIELD_BORDER;
+
+    let mut x = edge_w;
+    loop {
+        spawn_fence(
+            commands,
+            asset_server,
+            x + FENCE_SIZE / 2.,
+            edge_n,
+            FRAC_PI_2,
+        );
+        spawn_fence(
+            commands,
+            asset_server,
+            x + FENCE_SIZE / 2.,
+            edge_s,
+            FRAC_PI_2,
+        );
+        x += FENCE_SIZE;
+        if x >= edge_e {
+            break;
+        }
+    }
+    let mut z = edge_s;
+    loop {
+        spawn_fence(commands, asset_server, edge_e, z + FENCE_SIZE / 2., 0.);
+        spawn_fence(commands, asset_server, edge_w, z + FENCE_SIZE / 2., 0.);
+        z += FENCE_SIZE;
+        if z >= edge_n {
+            break;
+        }
+    }
+}
+
+fn create_field(
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    field_half_size_x: f32,
+    field_half_size_z: f32,
+    field_position_x: f32,
+    field_position_z: f32,
+) {
+    create_fences(
+        commands,
+        asset_server,
+        field_half_size_x,
+        field_half_size_z,
+        field_position_x,
+        field_position_z,
+    );
     let mut x = field_position_x - field_half_size_x as f32;
     loop {
         let mut z = -field_half_size_z as f32;
@@ -166,7 +255,7 @@ pub fn setup(
             .id(),
     );
 
-    create_field(commands, asset_server, 50.0, 50.0, 0.0, 0.0);
+    create_field(&mut commands, &asset_server, 50.0, 50.0, 0.0, 0.0);
 }
 
 pub fn update_score(
