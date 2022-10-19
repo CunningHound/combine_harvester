@@ -1,3 +1,4 @@
+mod animals;
 mod drop_zone;
 mod game;
 mod harvest;
@@ -29,6 +30,7 @@ fn main() {
         .add_system_set(SystemSet::on_enter(game::GameState::Playing).with_system(vehicles::setup))
         .add_system_set(SystemSet::on_enter(game::GameState::Playing).with_system(drop_zone::setup))
         .add_system_set(SystemSet::on_enter(game::GameState::Playing).with_system(ui::setup))
+        .add_system_set(SystemSet::on_enter(game::GameState::Playing).with_system(animals::setup))
         .add_system_set(
             SystemSet::on_update(game::GameState::Playing)
                 .with_system(vehicles::move_combine)
@@ -45,6 +47,9 @@ fn main() {
             SystemSet::on_update(game::GameState::Playing)
                 .with_system(drop_zone::drop_zone_update)
                 .with_system(drop_zone::drop_zone_accept),
+        )
+        .add_system_set(
+            SystemSet::on_update(game::GameState::Playing).with_system(animals::move_animals),
         )
         .add_system_set(
             SystemSet::on_update(game::GameState::Playing)

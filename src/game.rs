@@ -23,6 +23,7 @@ pub enum GameLayer {
     Crop,
     Obstacle,
     World,
+    Animal,
 }
 
 #[derive(Default)]
@@ -256,7 +257,7 @@ pub fn setup(
         .insert(
             CollisionLayers::none()
                 .with_group(GameLayer::World)
-                .with_mask(GameLayer::Vehicle),
+                .with_masks(&[GameLayer::Vehicle, GameLayer::Animal]),
         );
 
     const ORTH_PROJECTION_SIZE: f32 = 250.0;
